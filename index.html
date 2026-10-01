@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>줌스팟 - 화면 확대·주석·마우스 강조</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="stage">
+  <canvas id="base"></canvas>
+  <canvas id="fx"></canvas>
+</div>
+
+<!-- 시작 화면 -->
+<div id="start" class="overlay">
+  <div class="card">
+    <h1>🔍 줌스팟</h1>
+    <p class="sub">화면 확대 · 화살표/사각형 주석 · 마우스 스포트라이트</p>
+    <div class="start-btns">
+      <button id="btnShare" class="primary">🖥️ 화면 공유로 시작</button>
+      <button id="btnImage">🖼️ 이미지 불러오기</button>
+      <button id="btnSample">🎯 샘플로 연습하기</button>
+    </div>
+    <p class="hint">이미지를 이 창에 끌어다 놓아도 됩니다.<br>
+    브라우저 보안상 화면은 <b>화면 공유(캡처)</b> 위에 그려집니다. 이 탭 자체를 공유하면 화면이 겹쳐 보일 수 있으니 다른 창/모니터를 선택하세요.</p>
+    <p id="startError" class="error"></p>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" hidden>
+
+<!-- 툴바 -->
+<div id="toolbar" class="toolbar">
+  <div class="group">
+    <button data-tool="pan" title="확대/이동 (1)">✋<small>이동</small></button>
+    <button data-tool="arrow" title="화살표 (2)">➚<small>화살표</small></button>
+    <button data-tool="rect" title="사각형 (3)">▭<small>사각형</small></button>
+    <button data-tool="pen" title="펜 (4)">✎<small>펜</small></button>
+    <button data-tool="marker" title="형광펜 (5)">🖍<small>형광펜</small></button>
+  </div>
+  <div class="sep"></div>
+  <div class="group colors">
+    <button class="sw" data-color="#ff3b30" style="--c:#ff3b30" title="빨강 (R)"></button>
+    <button class="sw" data-color="#ff9500" style="--c:#ff9500" title="주황 (O)"></button>
+    <button class="sw" data-color="#ffe600" style="--c:#ffe600" title="노랑 (Y)"></button>
+    <button class="sw" data-color="#34c759" style="--c:#34c759" title="초록 (G)"></button>
+    <button class="sw" data-color="#0a84ff" style="--c:#0a84ff" title="파랑 (B)"></button>
+    <button class="sw" data-color="#ffffff" style="--c:#ffffff" title="흰색 (W)"></button>
+    <input type="color" id="colorPicker" title="색상 직접 선택" value="#ff3b30">
+  </div>
+  <div class="sep"></div>
+  <div class="group">
+    <label class="slider" title="굵기 (Shift+휠)">굵기
+      <input type="range" id="width" min="1" max="30" value="5">
+    </label>
+    <label class="check" title="사각형 채우기">
+      <input type="checkbox" id="fill"> 채움
+    </label>
+  </div>
+  <div class="sep"></div>
+  <div class="group">
+    <button id="btnSpot" title="스포트라이트 (S)">🔦<small>스포트</small></button>
+    <button id="btnSpotCfg" title="스포트라이트 설정">⚙<small>설정</small></button>
+  </div>
+  <div class="sep"></div>
+  <div class="group">
+    <button id="btnUndo" title="실행취소 (Ctrl+Z)">↶<small>취소</small></button>
+    <button id="btnRedo" title="다시실행 (Ctrl+Y)">↷<small>다시</small></button>
+    <button id="btnClear" title="모두 지우기 (E)">🗑<small>지우기</small></button>
+    <button id="btnSave" title="PNG 저장 (Ctrl+S)">💾<small>저장</small></button>
+  </div>
+  <div class="sep"></div>
+  <div class="group">
+    <button id="btnFull" title="전체화면 (F)">⛶<small>전체</small></button>
+    <button id="btnSource" title="화면 소스 변경">📺<small>소스</small></button>
+    <button id="btnHelp" title="도움말 (?)">?<small>도움말</small></button>
+  </div>
+</div>
+
+<!-- 스포트라이트 설정 -->
+<div id="spotPanel" class="panel" hidden>
+  <h3>🔦 스포트라이트</h3>
+  <label>스타일
+    <select id="spotStyle">
+      <option value="highlight">원형 하이라이트</option>
+      <option value="dim">화면 어둡게 (스포트라이트)</option>
+      <option value="ring">링</option>
+      <option value="cross">십자선</option>
+    </select>
+  </label>
+  <label>크기 <span id="spotSizeV"></span>
+    <input type="range" id="spotSize" min="20" max="200">
+  </label>
+  <label>투명도 <span id="spotOpV"></span>
+    <input type="range" id="spotOpacity" min="10" max="90">
+  </label>
+  <label>어둡기 <span id="spotDimV"></span>
+    <input type="range" id="spotDim" min="20" max="95">
+  </label>
+  <label>색상 <input type="color" id="spotColor"></label>
+</div>
+
+<!-- 도움말 -->
+<div id="help" class="overlay" hidden>
+  <div class="card">
+    <h2>단축키 · 사용법</h2>
+    <table>
+      <tr><td><kbd>휠</kbd></td><td>커서 위치 기준 확대/축소 (1x~8x)</td></tr>
+      <tr><td><kbd>좌클릭 드래그</kbd></td><td>주석 그리기</td></tr>
+      <tr><td><kbd>우클릭</kbd></td><td>마지막 주석부터 하나씩 역순으로 취소 (주석이 없으면 확대 해제)</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>확대 해제</td></tr>
+      <tr><td><kbd>Space</kbd>+드래그 · 휠클릭</td><td>이동(패닝)</td></tr>
+      <tr><td><kbd>1</kbd>~<kbd>5</kbd></td><td>이동 / 화살표 / 사각형 / 펜 / 형광펜</td></tr>
+      <tr><td><kbd>R</kbd> <kbd>O</kbd> <kbd>Y</kbd> <kbd>G</kbd> <kbd>B</kbd> <kbd>W</kbd></td><td>빨강 / 주황 / 노랑 / 초록 / 파랑 / 흰색</td></tr>
+      <tr><td><kbd>Shift</kbd>+휠</td><td>선 굵기 조절</td></tr>
+      <tr><td><kbd>S</kbd></td><td>마우스 스포트라이트 켜기/끄기</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd></td><td>실행취소 / 다시실행</td></tr>
+      <tr><td><kbd>E</kbd> / <kbd>Delete</kbd></td><td>주석 모두 지우기</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>현재 화면 PNG 저장</td></tr>
+      <tr><td><kbd>F</kbd></td><td>전체화면</td></tr>
+      <tr><td><kbd>H</kbd></td><td>툴바 고정/자동숨김</td></tr>
+      <tr><td><kbd>?</kbd></td><td>이 도움말</td></tr>
+    </table>
+    <p class="hint">툴바는 3초간 입력이 없으면 숨고, 화면 하단으로 마우스를 가져가면 다시 나타납니다.</p>
+    <button id="btnHelpClose" class="primary">닫기</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>

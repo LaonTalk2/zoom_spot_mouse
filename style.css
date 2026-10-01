@@ -1,0 +1,103 @@
+:root {
+  --bg: #0f1115;
+  --panel: rgba(24, 27, 34, .88);
+  --line: rgba(255, 255, 255, .12);
+  --text: #e8eaf0;
+  --muted: #9aa3b2;
+  --accent: #4c8dff;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+  font-family: "Pretendard", "Malgun Gothic", system-ui, sans-serif; }
+button, input, select { font: inherit; color: inherit; }
+
+#stage { position: fixed; inset: 0; background: #000; touch-action: none; user-select: none; }
+#stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#fx { pointer-events: none; }
+#stage.tool-pan { cursor: grab; }
+#stage.panning { cursor: grabbing; }
+#stage.tool-arrow, #stage.tool-rect, #stage.tool-pen, #stage.tool-marker { cursor: crosshair; }
+#stage.spot-on { cursor: none; }
+
+/* 툴바 */
+.toolbar {
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 6px; padding: 8px 12px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+  backdrop-filter: blur(12px); box-shadow: 0 8px 30px rgba(0, 0, 0, .5);
+  transition: opacity .25s, transform .25s; max-width: calc(100vw - 16px); flex-wrap: wrap; justify-content: center;
+  z-index: 10;
+}
+.toolbar.hidden { opacity: 0; transform: translate(-50%, 30px); pointer-events: none; }
+.group { display: flex; align-items: center; gap: 4px; }
+.sep { width: 1px; height: 30px; background: var(--line); margin: 0 4px; }
+.toolbar button {
+  background: transparent; border: 1px solid transparent; border-radius: 10px;
+  min-width: 44px; padding: 4px 6px; cursor: pointer; font-size: 18px; line-height: 1.1;
+  display: flex; flex-direction: column; align-items: center;
+}
+.toolbar button small { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.toolbar button:hover { background: rgba(255, 255, 255, .08); }
+.toolbar button.active { background: rgba(76, 141, 255, .25); border-color: var(--accent); }
+.toolbar button:disabled { opacity: .35; cursor: default; }
+.toolbar .sw {
+  min-width: 0; width: 24px; height: 24px; padding: 0; border-radius: 50%;
+  background: var(--c); border: 2px solid rgba(255, 255, 255, .35);
+}
+.toolbar .sw.active { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); background: var(--c); }
+#colorPicker { width: 28px; height: 28px; padding: 0; border: none; background: none; cursor: pointer; }
+.slider, .check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.slider input { width: 80px; }
+
+/* 설정 패널 */
+.panel {
+  position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+  width: 280px; padding: 14px 16px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; backdrop-filter: blur(12px); z-index: 11;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.panel[hidden] { display: none; }
+.panel h3 { margin: 0; font-size: 14px; }
+.panel label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.panel select { background: #1d2129; border: 1px solid var(--line); border-radius: 8px; padding: 6px; }
+
+/* 오버레이 */
+.overlay {
+  position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
+  background: rgba(10, 12, 16, .85); backdrop-filter: blur(6px); padding: 16px;
+}
+.overlay[hidden] { display: none; }
+.card {
+  width: min(560px, 100%); background: #181b22; border: 1px solid var(--line); border-radius: 18px;
+  padding: 28px; box-shadow: 0 20px 60px rgba(0, 0, 0, .6);
+}
+.card h1 { margin: 0; font-size: 28px; }
+.card h2 { margin: 0 0 14px; }
+.sub { color: var(--muted); margin: 6px 0 22px; }
+.start-btns { display: flex; flex-direction: column; gap: 10px; }
+.card button {
+  background: #232834; border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px;
+  cursor: pointer; font-size: 15px;
+}
+.card button:hover { background: #2c3342; }
+.card button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.card button.primary:hover { background: #3a7bf0; }
+.hint { color: var(--muted); font-size: 12.5px; line-height: 1.6; margin-top: 16px; }
+.error { color: #ff6b6b; font-size: 13px; min-height: 1em; margin: 8px 0 0; }
+#help table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+#help td { padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+#help td:first-child { white-space: nowrap; padding-right: 14px; }
+kbd { background: #2b3040; border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; font-size: 12px; }
+#help .primary { margin-top: 14px; width: 100%; }
+
+#toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px); opacity: 0;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 8px 18px;
+  font-size: 14px; transition: .25s; pointer-events: none; z-index: 30;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 720px) {
+  .slider input { width: 60px; }
+  .toolbar button { min-width: 38px; }
+}
